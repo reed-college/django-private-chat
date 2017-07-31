@@ -50,7 +50,8 @@ def gone_online(stream):
                 logger.debug('User '+user_owner.username+' gone online')
                 # find all connections including user_owner as opponent,
                 # send them a message that the user has gone online
-                online_opponents = list(filter(lambda x: x[1] == user_owner.username, ws_connections))
+                online_opponents = list(
+                    filter(lambda x: x[1] == user_owner.username, ws_connections))
                 online_opponents_sockets = [ws_connections[i] for i in online_opponents]
                 yield from fanout_message(online_opponents_sockets,
                                           {'type': 'gone-online', 'usernames': [user_owner.username]})
@@ -73,8 +74,10 @@ def check_online(stream):
             user_owner = get_user_from_session(session_id)
             if user_owner:
                 # Find all connections including user_owner as opponent
-                online_opponents = list(filter(lambda x: x[1] == user_owner.username, ws_connections))
-                logger.debug('User '+user_owner.username+' has '+str(len(online_opponents))+' opponents online')
+                online_opponents = list(
+                    filter(lambda x: x[1] == user_owner.username, ws_connections))
+                logger.debug('User '+user_owner.username+' has ' +
+                             str(len(online_opponents))+' opponents online')
                 # Send user online statuses of his opponents
                 socket = ws_connections.get((user_owner.username, opponent_username))
                 if socket:
@@ -104,7 +107,8 @@ def gone_offline(stream):
                 logger.debug('User '+user_owner.username+' gone offline')
                 # find all connections including user_owner as opponent,
                 #  send them a message that the user has gone offline
-                online_opponents = list(filter(lambda x: x[1] == user_owner.username, ws_connections))
+                online_opponents = list(
+                    filter(lambda x: x[1] == user_owner.username, ws_connections))
                 online_opponents_sockets = [ws_connections[i] for i in online_opponents]
                 yield from fanout_message(online_opponents_sockets,
                                           {'type': 'gone-offline', 'username': user_owner.username})
@@ -144,14 +148,18 @@ def new_messages_handler(stream):
                     connections = []
                     # Find socket of the user which sent the message
                     if (user_owner.username, user_opponent.username) in ws_connections:
-                        connections.append(ws_connections[(user_owner.username, user_opponent.username)])
+                        connections.append(
+                            ws_connections[(user_owner.username, user_opponent.username)])
                     # Find socket of the opponent
                     if (user_opponent.username, user_owner.username) in ws_connections:
-                        connections.append(ws_connections[(user_opponent.username, user_owner.username)])
+                        connections.append(
+                            ws_connections[(user_opponent.username, user_owner.username)])
                     else:
                         # Find sockets of people who the opponent is talking with
-                        opponent_connections = list(filter(lambda x: x[0] == user_opponent.username, ws_connections))
-                        opponent_connections_sockets = [ws_connections[i] for i in opponent_connections]
+                        opponent_connections = list(
+                            filter(lambda x: x[0] == user_opponent.username, ws_connections))
+                        opponent_connections_sockets = [ws_connections[i]
+                                                        for i in opponent_connections]
                         connections.extend(opponent_connections_sockets)
 
                     yield from fanout_message(connections, packet)
@@ -232,7 +240,8 @@ def main_handler(websocket, path):
         try:
             while websocket.open:
                 data = yield from websocket.recv()
-                if not data: continue
+                if not data:
+                    continue
                 logger.debug(data)
                 try:
                     yield from router.MessageRouter(data)()
@@ -245,3 +254,10 @@ def main_handler(websocket, path):
             del ws_connections[(user_owner, username)]
     else:
         logger.info("Got invalid session_id attempt to connect "+session_id)
+
+
+@asyncio.coroutine
+def test_handler(stream):
+    while True:
+        packet = yield from stream.get()
+        print(packet)
