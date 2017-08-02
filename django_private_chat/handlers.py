@@ -74,8 +74,9 @@ def check_online(stream):
             user_owner = get_user_from_session(session_id)
             if user_owner:
                 # Find all connections including user_owner as opponent
+                # also adds any connections your opponent has open
                 online_opponents = list(
-                    filter(lambda x: x[1] == user_owner.username, ws_connections))
+                    filter(lambda x: x[1] == user_owner.username or x[0] == opponent_username, ws_connections))
                 logger.debug('User '+user_owner.username+' has ' +
                              str(len(online_opponents))+' opponents online')
                 # Send user online statuses of his opponents
@@ -260,4 +261,3 @@ def main_handler(websocket, path):
 def test_handler(stream):
     while True:
         packet = yield from stream.get()
-        print(packet)
