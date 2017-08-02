@@ -258,6 +258,7 @@ def main_handler(websocket, path):
 
 
 @asyncio.coroutine
-def test_handler(stream):
+def list_check_online(stream):
     while True:
         packet = yield from stream.get()
+        print(packet)
