@@ -47,7 +47,7 @@ def gone_online(stream):
         if session_id:
             user_owner = get_user_from_session(session_id)
             if user_owner:
-                logger.debug('User '+user_owner.username+' gone online')
+                logger.debug('User ' + user_owner.username + ' gone online')
                 # find all connections including user_owner as opponent,
                 # send them a message that the user has gone online
                 online_opponents = list(
@@ -77,8 +77,8 @@ def check_online(stream):
                 # also adds any connections your opponent has open
                 online_opponents = list(
                     filter(lambda x: x[1] == user_owner.username or x[0] == opponent_username, ws_connections))
-                logger.debug('User '+user_owner.username+' has ' +
-                             str(len(online_opponents))+' opponents online')
+                logger.debug('User ' + user_owner.username + ' has ' +
+                             str(len(online_opponents)) + ' opponents online')
                 # Send user online statuses of his opponents
                 socket = ws_connections.get((user_owner.username, opponent_username))
                 if socket:
@@ -105,7 +105,7 @@ def gone_offline(stream):
         if session_id:
             user_owner = get_user_from_session(session_id)
             if user_owner:
-                logger.debug('User '+user_owner.username+' gone offline')
+                logger.debug('User ' + user_owner.username + ' gone offline')
                 # find all connections including user_owner as opponent,
                 #  send them a message that the user has gone offline
                 online_opponents = list(
@@ -183,7 +183,7 @@ def users_changed_handler(stream):
         users = [
             {'username': username, 'uuid': uuid_str}
             for username, uuid_str in ws_connections.values()
-            ]
+        ]
 
         # Make packet with list of new users (sorted by username)
         packet = {
@@ -254,11 +254,35 @@ def main_handler(websocket, path):
         finally:
             del ws_connections[(user_owner, username)]
     else:
-        logger.info("Got invalid session_id attempt to connect "+session_id)
+        logger.info("Got invalid session_id attempt to connect " + session_id)
 
 
 @asyncio.coroutine
 def list_check_online(stream):
     while True:
         packet = yield from stream.get()
-        print(packet)
+        session_id = packet.get('session_key')
+        users_list = packet.get('users_list')
+        username_opponent = packet.get('username')
+        if session_id and users_list:
+            user_owner = get_user_from_session(session_id)
+            if user_owner:
+                # Find all connections that a user from users_list owns
+                online_users = list(
+                    filter(lambda x: x[0] in users_list, ws_connections))
+                logger.debug('User ' + user_owner.username + ' has checked for ' +
+                             str(len(users_list)) + ' users and found ' +
+                             str(len(online_users)) + ' online')
+                # Send user online statuses of the people they checked for
+                socket = ws_connections.get((user_owner.username, username_opponent))
+                if socket:
+                    online_usernames = [i[0] for i in online_users]
+                    yield from target_message(socket,
+                                              {'type': 'gone-online', 'usernames': online_usernames})
+                else:
+                    pass  # socket for the pair user_owner.username not found
+                    # this can be in case the user has already gone offline
+            else:
+                pass  # invalid session id
+        else:
+            pass  # no session id or user_list
