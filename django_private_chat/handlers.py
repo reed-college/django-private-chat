@@ -8,6 +8,10 @@ from .utils import get_user_from_session, get_dialogs_with_user
 
 logger = logging.getLogger('django-private-dialog')
 ws_connections = {}
+# The keys of this dictionary will be usernames and the values will be a list
+# of the usernames of the people who want to check the online status of the
+# key's user
+checkers = {}
 
 
 @asyncio.coroutine
@@ -279,6 +283,16 @@ def list_check_online(stream):
                     online_usernames = [i[0] for i in online_users]
                     yield from target_message(socket,
                                               {'type': 'gone-online', 'usernames': online_usernames})
+                    # add user_owner to checkers dict
+                    for user in users_list:
+                        checkers_set = checkers.get(user)
+                        if checkers_set:
+                            checkers_set.add(user_owner.username)
+                        else:
+                            checkers[user] = {user_owner.username}
+
+                    print(checkers)
+
                 else:
                     pass  # socket for the pair user_owner.username not found
                     # this can be in case the user has already gone offline
