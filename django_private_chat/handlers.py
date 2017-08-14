@@ -144,6 +144,8 @@ def new_messages_handler(stream):
                     )
                     packet['created'] = msg.get_formatted_create_datetime()
                     packet['sender_name'] = msg.sender.username
+                    packet['sender_first_name'] = msg.sender.first_name
+                    packet['sender_last_name'] = msg.sender.last_name
 
                     # Send the message
                     connections = []
