@@ -1,10 +1,6 @@
 from django.views import generic
 from braces.views import LoginRequiredMixin
 
-try:
-    from django.urls import reverse
-except ImportError:
-    from django.core.urlresolvers import reverse
 from . import models
 from . import utils
 from django.shortcuts import get_object_or_404
@@ -39,8 +35,5 @@ class DialogListView(LoginRequiredMixin, generic.ListView):
             context['opponent_username'] = context['active_dialog'].opponent.username
         else:
             context['opponent_username'] = context['active_dialog'].owner.username
-        context['ws_server_path'] = 'ws://{}:{}/'.format(
-            settings.CHAT_WS_SERVER_HOST,
-            settings.CHAT_WS_SERVER_PORT,
-        )
+        context['ws_server_path'] = settings.CHAT_WS_BASE
         return context
